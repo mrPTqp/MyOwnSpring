@@ -5,6 +5,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.stereotype.Component;
 import org.springframework.beans.factory.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
@@ -13,13 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class BeanFactory {
     private Map<String, Object> singletons = new HashMap();
@@ -120,17 +115,21 @@ public class BeanFactory {
         }
     }
 
-    public void close() {
+    public void postConstructInitializeBeans() throws InvocationTargetException, IllegalAccessException {
+        for (Object bean : singletons.values()) {
+            for (Method method : bean.getClass().getMethods()) {
+                if (method.isAnnotationPresent(PostConstruct.class)) {
+                    method.invoke(bean);
+                }
+            }
+        }
+    }
+
+    public void close() throws InvocationTargetException, IllegalAccessException {
         for (Object bean : singletons.values()) {
             for (Method method : bean.getClass().getMethods()) {
                 if (method.isAnnotationPresent(PreDestroy.class)) {
-                    try {
-                        method.invoke(bean);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
+                    method.invoke(bean);
                 }
             }
 

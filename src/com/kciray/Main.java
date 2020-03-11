@@ -21,10 +21,12 @@ public class Main {
     void testBeanFactory() throws ReflectiveOperationException{
         BeanFactory beanFactory = new BeanFactory();
         beanFactory.addPostProcessor(new CustomPostProcessor());
+        beanFactory.addPostProcessor(new PostConstructPostProcessor());
 
         beanFactory.instantiate("com.kciray");
         beanFactory.populateProperties();
         beanFactory.injectBeanNames();
+        beanFactory.postConstructInitializeBeans();
         beanFactory.initializeBeans();
 
         ProductService productService = (ProductService) beanFactory.getBean("productService");
